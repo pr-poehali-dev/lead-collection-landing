@@ -4,6 +4,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime
+import psycopg2
 
 CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
@@ -37,6 +38,16 @@ def handler(event: dict, context) -> dict:
             "headers": CORS_HEADERS,
             "body": json.dumps({"error": "Заполните все поля"}),
         }
+
+    conn = psycopg2.connect(os.environ["DATABASE_URL"])
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO leads (name, phone, email) VALUES (%s, %s, %s)",
+        (name, phone, email),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
 
     smtp_host = "smtp.gmail.com"
     smtp_port = 587
